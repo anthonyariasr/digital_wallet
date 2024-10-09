@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # URL de la base de datos. Actualiza con tus propias configuraciones.
-DATABASE_URL = "sqlite:///./local_database.db"  # Puedes cambiar a otro motor, por ejemplo, 'postgresql://user:password@localhost/dbname'
+DATABASE_URL = "sqlite:///./backend/local_database.db"  # Puedes cambiar a otro motor, por ejemplo, 'postgresql://user:password@localhost/dbname'
 
 # Crear el motor de la base de datos
 engine = create_engine(
