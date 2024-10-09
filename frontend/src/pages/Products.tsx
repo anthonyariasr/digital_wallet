@@ -1,117 +1,77 @@
-import React, { useState } from 'react';
-import { Plus, Edit, Trash } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Minus, ShoppingCart } from 'lucide-react';
 
 const Products = () => {
-  const [products, setProducts] = useState([
-    { id: 1, name: 'Producto 1', price: 10.99, stock: 100 },
-    { id: 2, name: 'Producto 2', price: 15.99, stock: 50 },
-  ]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [cart, setCart] = useState({});
 
-  const openModal = (product = null) => {
-    setCurrentProduct(product);
-    setIsModalOpen(true);
+  useEffect(() => {
+    // Aquí iría la llamada a la API para obtener los productos
+    // Por ahora, usaremos datos de ejemplo
+    setProducts([
+      { id: 1, name: 'Producto 1', price: 10.99 },
+      { id: 2, name: 'Producto 2', price: 15.99 },
+      { id: 3, name: 'Producto 3', price: 20.99 },
+      { id: 4, name: 'Producto 4', price: 25.99 },
+      { id: 5, name: 'Producto 5', price: 30.99 },
+    ]);
+  }, []);
+
+  const handleIncrement = (productId) => {
+    setCart((prevCart) => ({
+      ...prevCart,
+      [productId]: (prevCart[productId] || 0) + 1,
+    }));
   };
 
-  const closeModal = () => {
-    setCurrentProduct(null);
-    setIsModalOpen(false);
+  const handleDecrement = (productId) => {
+    setCart((prevCart) => ({
+      ...prevCart,
+      [productId]: Math.max((prevCart[productId] || 0) - 1, 0),
+    }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Lógica para agregar o actualizar producto
-    closeModal();
-  };
-
-  const handleDelete = (id) => {
-    // Lógica para eliminar producto
+  const handleCreateOrder = () => {
+    const order = Object.entries(cart).map(([productId, quantity]) => ({
+      productId: parseInt(productId),
+      quantity,
+    }));
+    console.log('Orden creada:', order);
+    // Aquí iría la lógica para enviar la orden al servidor
   };
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Productos</h1>
-        <button
-          onClick={() => openModal()}
-          className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200 flex items-center"
-        >
-          <Plus className="mr-2" /> Agregar Producto
-        </button>
-      </div>
-      <table className="w-full bg-white shadow-md rounded-lg overflow-hidden">
-        <thead className="bg-gray-200 text-gray-700">
-          <tr>
-            <th className="py-3 px-4 text-left">Nombre</th>
-            <th className="py-3 px-4 text-left">Precio</th>
-            <th className="py-3 px-4 text-left">Stock</th>
-            <th className="py-3 px-4 text-left">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map((product) => (
-            <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-100">
-              <td className="py-3 px-4">{product.name}</td>
-              <td className="py-3 px-4">${product.price.toFixed(2)}</td>
-              <td className="py-3 px-4">{product.stock}</td>
-              <td className="py-3 px-4">
-                <button
-                  onClick={() => openModal(product)}
-                  className="text-blue-500 hover:text-blue-700 mr-2"
-                >
-                  <Edit className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(product.id)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash className="h-5 w-5" />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h2 className="text-2xl font-bold mb-4">
-              {currentProduct ? 'Editar Producto' : 'Agregar Producto'}
-            </h2>
-            <form onSubmit={handleSubmit}>
-              {/* Campos del formulario */}
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  defaultValue={currentProduct?.name}
-                />
-              </div>
-              {/* Agregar más campos según sea necesario */}
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-200 mr-2"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200"
-                >
-                  Guardar
-                </button>
-              </div>
-            </form>
+      <h1 className="text-3xl font-bold mb-6">Productos</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {products.map((product) => (
+          <div key={product.id} className="bg-white p-4 rounded-lg shadow">
+            <h3 className="font-bold">{product.name}</h3>
+            <p className="text-gray-600">${product.price.toFixed(2)}</p>
+            <div className="flex items-center mt-2">
+              <button
+                onClick={() => handleDecrement(product.id)}
+                className="bg-red-500 text-white p-1 rounded"
+              >
+                <Minus size={16} />
+              </button>
+              <span className="mx-2">{cart[product.id] || 0}</span>
+              <button
+                onClick={() => handleIncrement(product.id)}
+                className="bg-green-500 text-white p-1 rounded"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
+      <button
+        onClick={handleCreateOrder}
+        className="mt-6 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200 flex items-center"
+      >
+        <ShoppingCart className="mr-2" /> Crear Orden
+      </button>
     </div>
   );
 };
