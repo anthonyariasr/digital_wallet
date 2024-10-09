@@ -21,6 +21,7 @@ class Product(Base):
     price = Column(Float, nullable=False)
     stock = Column(Integer, nullable=False)
     sale = Column(Float, nullable=True)  # Sale price, nullable since not all products are on sale
+    img_link = Column(String, nullable=True)
     
     # Relationship with Order via the association table
     orders = relationship("Order", secondary=products_order_table, back_populates="products")
