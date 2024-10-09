@@ -1,1 +1,0 @@
-Here's where we are going to build the frontend for the local sales point
