@@ -138,16 +138,17 @@ def create_order(product_ids: list[int], quantities: list[int], client_id: int =
     qr_img.save(qr_filename)
 
     # Hold the system and check the status of the order in PostgreSQL
-    #response = check_order_status(order.id, db)
-    response = {"order created"}
+    #response = check_order_status(order.id, db) //// No funcional aún
 
+    response = {"Order Created"}
+    
     return response
 
 # Route to return the QR code image file
 @app.get("/qr-code/{order_id}")
 def get_qr_code(order_id: int):
     # Define the directory where QR codes are stored
-    qr_directory = "/images"
+    qr_directory = "backend/images"
     
     # Construct the full path to the QR code file
     qr_filename = os.path.join(qr_directory, f"order_{order_id}_qr.png")
@@ -187,3 +188,31 @@ def get_order_by_id(order_id: int, db: Session = Depends(get_db)):
         "total": order.total,
         "products": product_list
     }
+
+# Route to add predefined products to the database
+@app.post("/add-products")
+def add_products(db: Session = Depends(get_db)):
+    products = [
+        {"name": "PlayStation 5", "price": 499.99, "stock": 50, "sale": None},
+        {"name": "Xbox Series X", "price": 499.99, "stock": 40, "sale": 10.0},  # 10% discount
+        {"name": "Nintendo Switch", "price": 299.99, "stock": 70, "sale": 5.0},  # 5% discount
+        {"name": "iPhone 13", "price": 999.99, "stock": 30, "sale": None},
+        {"name": "Samsung Galaxy S21", "price": 799.99, "stock": 25, "sale": 15.0},  # 15% discount
+        {"name": "MacBook Pro", "price": 1299.99, "stock": 20, "sale": 10.0},  # 10% discount
+        {"name": "Dell XPS 13", "price": 1099.99, "stock": 15, "sale": None},
+        {"name": "Sony WH-1000XM4", "price": 349.99, "stock": 100, "sale": None},
+        {"name": "Apple Watch Series 7", "price": 399.99, "stock": 80, "sale": 5.0},  # 5% discount
+        {"name": "GoPro Hero 9", "price": 399.99, "stock": 60, "sale": None},
+    ]
+
+    for product_data in products:
+        product = Product(
+            name=product_data["name"],
+            price=product_data["price"],
+            stock=product_data["stock"],
+            sale=product_data["sale"]
+        )
+        db.add(product)
+    
+    db.commit()
+    return {"message": "Products have been added to the database."}
