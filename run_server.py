@@ -3,7 +3,7 @@ import sys
 
 if __name__ == "__main__":
     # Comando para iniciar el servidor con python -m uvicorn
-    command = [sys.executable, "-m", "uvicorn", "backend.app:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+    command = [sys.executable, "-m", "uvicorn", "backend.app:app", "--reload", "--host", "127.0.0.1", "--port", "8000"]
 
     try:
         print("Starting FastAPI server...")
