@@ -218,3 +218,54 @@ def add_products(db: Session = Depends(get_db)):
     
     db.commit()
     return {"message": "Products have been added to the database."}
+
+@app.get("/products")
+def get_all_products(db: Session = Depends(get_db)):
+    products = db.query(Product).all()
+    if not products:
+        raise HTTPException(status_code=404, detail="No products found.")
+    
+    product_list = []
+    for product in products:
+        product_info = {
+            "id": product.id,
+            "name": product.name,
+            "price": product.price,
+            "stock": product.stock,
+            "sale": product.sale,
+            "image": product.img_link
+        }
+        product_list.append(product_info)
+
+    return {"products": product_list}
+
+
+@app.post("/qr-code/recharge")
+def generate_recharge_qr(data: dict):
+    # Validate the input data
+    transaction = data.get("transaction")
+    amount = data.get("amount")
+
+    if not transaction or not amount:
+        raise HTTPException(status_code=400, detail="Transaction or amount not provided.")
+
+    # Generate QR code with transaction and amount
+    qr_data = {"transaction": transaction, "amount": amount}
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+
+    # Define the directory to save the QR code
+    qr_directory = "backend/images"
+
+    # Create the directory if it doesn't exist
+    if not os.path.exists(qr_directory):
+        os.makedirs(qr_directory)
+
+    # Save the QR code image in the specified directory
+    qr_filename = os.path.join(qr_directory, f"recharge_{amount}_qr.png")
+    qr_img = qr.make_image(fill='black', back_color='white')
+    qr_img.save(qr_filename)
+
+    return {"message": "QR code generated successfully", "qr_filename": qr_filename}
+
