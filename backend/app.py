@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from .database import get_db, engine
 from .models import Product, Order, Base, products_order_table
+from datetime import datetime
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -241,16 +242,13 @@ def get_all_products(db: Session = Depends(get_db)):
 
 
 @app.post("/qr-code/recharge")
-def generate_recharge_qr(data: dict):
+def generate_recharge_qr(amount: float):
     # Validate the input data
-    transaction = data.get("transaction")
-    amount = data.get("amount")
+    if not amount:
+        raise HTTPException(status_code=400, detail="Amount not provided.")
 
-    if not transaction or not amount:
-        raise HTTPException(status_code=400, detail="Transaction or amount not provided.")
-
-    # Generate QR code with transaction and amount
-    qr_data = {"transaction": transaction, "amount": amount}
+    # Generate QR code with amount
+    qr_data = {"transaction": "recharge", "amount": amount}
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
     qr.add_data(qr_data)
     qr.make(fit=True)
@@ -262,10 +260,13 @@ def generate_recharge_qr(data: dict):
     if not os.path.exists(qr_directory):
         os.makedirs(qr_directory)
 
+    # Generate a unique filename using only the current timestamp
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    qr_filename = os.path.join(qr_directory, f"recharge_{amount}_{timestamp}.png")
+
     # Save the QR code image in the specified directory
-    qr_filename = os.path.join(qr_directory, f"recharge_{amount}_qr.png")
     qr_img = qr.make_image(fill='black', back_color='white')
     qr_img.save(qr_filename)
 
+    # Return the message and the generated QR code filename
     return {"message": "QR code generated successfully", "qr_filename": qr_filename}
-
