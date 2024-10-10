@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from .database import get_db, engine
 from .models import Product, Order, Base, products_order_table
+from datetime import datetime
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -240,3 +241,54 @@ def add_products(db: Session = Depends(get_db)):
     
     db.commit()
     return {"message": "Products have been added to the database."}
+
+@app.get("/products")
+def get_all_products(db: Session = Depends(get_db)):
+    products = db.query(Product).all()
+    if not products:
+        raise HTTPException(status_code=404, detail="No products found.")
+    
+    product_list = []
+    for product in products:
+        product_info = {
+            "id": product.id,
+            "name": product.name,
+            "price": product.price,
+            "stock": product.stock,
+            "sale": product.sale,
+            "image": product.img_link
+        }
+        product_list.append(product_info)
+
+    return {"products": product_list}
+
+
+@app.post("/qr-code/recharge")
+def generate_recharge_qr(amount: float):
+    # Validate the input data
+    if not amount:
+        raise HTTPException(status_code=400, detail="Amount not provided.")
+
+    # Generate QR code with amount
+    qr_data = {"transaction": "recharge", "amount": amount}
+    qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+    qr.add_data(qr_data)
+    qr.make(fit=True)
+
+    # Define the directory to save the QR code
+    qr_directory = "backend/images"
+
+    # Create the directory if it doesn't exist
+    if not os.path.exists(qr_directory):
+        os.makedirs(qr_directory)
+
+    # Generate a unique filename using only the current timestamp
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    qr_filename = os.path.join(qr_directory, f"recharge_{amount}_{timestamp}.png")
+
+    # Save the QR code image in the specified directory
+    qr_img = qr.make_image(fill='black', back_color='white')
+    qr_img.save(qr_filename)
+
+    # Return the message and the generated QR code filename
+    return {"message": "QR code generated successfully", "qr_filename": qr_filename}
