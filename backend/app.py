@@ -17,9 +17,9 @@ Base.metadata.create_all(bind=engine)
 
 # PostgreSQL connection settings
 POSTGRES_HOST = "localhost"
-POSTGRES_DB = "your_postgres_db"
-POSTGRES_USER = "your_user"
-POSTGRES_PASSWORD = "your_password"
+POSTGRES_DB = "proyecto_II"
+POSTGRES_USER = "postgres"
+POSTGRES_PASSWORD = "Luisa1240"
 POSTGRES_PORT = "5432"
 
 # Function to connect to PostgreSQL
@@ -33,8 +33,9 @@ def get_postgres_connection():
     )
     return conn
 
-# Function to check the order status in PostgreSQL and hold until a response is received or timeout occurs
-def check_order_status(order_id: int, db: Session):
+#Function to check the order status in PostgreSQL and hold until a response is received or timeout occurs
+#Revisarla
+def check_order_status(order_id: int, total , db: Session):
     conn = get_postgres_connection()
     cursor = conn.cursor()
     max_attempts = 12  # 12 attempts (12 * 5 seconds = 60 seconds)
@@ -43,7 +44,7 @@ def check_order_status(order_id: int, db: Session):
     while attempts < max_attempts:
         time.sleep(5)  # Wait 5 seconds between queries
         try:
-            cursor.execute("SELECT client_id, processed FROM orders WHERE id = %s", (order_id,))
+            cursor.execute("SELECT client_id, processed FROM Sale_Order WHERE order_id = %s", (order_id,))
             result = cursor.fetchone()
 
             if result and result[1]:  # If processed is True
@@ -74,6 +75,23 @@ def check_order_status(order_id: int, db: Session):
     except SQLAlchemyError as e:
         db.rollback()
         return {"message": f"Error rolling back order: {e}", "order_id": order_id}
+
+
+#Funciones de insertar transacción en el nodo central
+def insert_transaction(order_id: int, client_id: int, total : float):
+    conn = get_postgres_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO Sale_Order (order_id, client_id, processed, total) VALUES (%s, %s, %s, %s)", (order_id, client_id, True, total))
+        conn.commit()
+    except psycopg2.Error as e:
+        print(f"Error inserting transaction in PostgreSQL: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
+
+
 
 # Root endpoint to check if the API is running
 @app.get("/")
@@ -119,9 +137,13 @@ def create_order(product_ids: list[int], quantities: list[int], client_id: int =
     order.total = total
     db.commit()
 
+
+    #Insertar transacción en el nodo central. Se debe crear una función para eso.
+    insert_transaction(order.id, client_id, total)
+
     # Generate QR code with order ID
     qr_data = {"transaction":"sale",
-               "OrderID":{order.id}}
+                "OrderID":{order.id}}
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
     qr.add_data(qr_data)
     qr.make(fit=True)
@@ -141,7 +163,7 @@ def create_order(product_ids: list[int], quantities: list[int], client_id: int =
     # Hold the system and check the status of the order in PostgreSQL
     #response = check_order_status(order.id, db) //// No funcional aún
 
-    response = {"Order Created"}
+    response = check_order_status(order.id, total, db)
     
     return response
 
