@@ -1,11 +1,12 @@
 import qrcode, os, time, psycopg2, hmac, hashlib
-from .models import *
-from .database import *
+from .database import get_db, engine
+from .models import Product, Order, Base, products_order_table
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
+from sqlalchemy import inspect
 
 SECRET_KEY = "Q3BTRKRU9VA4T5HH0G7M"
 
@@ -14,6 +15,8 @@ app = FastAPI()
 
 # Create all tables in the current FastAPI database (if they do not already exist)
 Base.metadata.create_all(bind=engine)
+inspector = inspect(engine)
+print("print:" + str(inspector.get_table_names()))  
 
 # PostgreSQL connection settings
 POSTGRES_HOST = "localhost"
@@ -92,6 +95,33 @@ def insert_transaction(order_id: int, client_id: int, total: float):
 
 
 # POST routes
+# Route to add predefined products to the database
+@app.post("/add-products")
+def add_products(db: Session = Depends(get_db)):
+    products = [
+        {"name": "PlayStation 5", "price": 499.99, "stock": 50, "sale": None},
+        {"name": "Xbox Series X", "price": 499.99, "stock": 40, "sale": 10.0},  # 10% discount
+        {"name": "Nintendo Switch", "price": 299.99, "stock": 70, "sale": 5.0},  # 5% discount
+        {"name": "iPhone 13", "price": 999.99, "stock": 30, "sale": None},
+        {"name": "Samsung Galaxy S21", "price": 799.99, "stock": 25, "sale": 15.0},  # 15% discount
+        {"name": "MacBook Pro", "price": 1299.99, "stock": 20, "sale": 10.0},  # 10% discount
+        {"name": "Dell XPS 13", "price": 1099.99, "stock": 15, "sale": None},
+        {"name": "Sony WH-1000XM4", "price": 349.99, "stock": 100, "sale": None},
+        {"name": "Apple Watch Series 7", "price": 399.99, "stock": 80, "sale": 5.0},  # 5% discount
+        {"name": "GoPro Hero 9", "price": 399.99, "stock": 60, "sale": None},
+    ]
+    for product_data in products:
+        product = Product(
+            name=product_data["name"],
+            price=product_data["price"],
+            stock=product_data["stock"],
+            sale=product_data["sale"]
+        )
+        db.add(product)
+    
+    db.commit()
+    return {"message": "Products have been added to the database."}
+
 @app.post("/create-order")
 def create_order(product_ids: list[int], quantities: list[int], client_id: int = None, db: Session = Depends(get_db)):
     if len(product_ids) != len(quantities):
