@@ -6,15 +6,10 @@ const Products = () => {
   const [cart, setCart] = useState({});
 
   useEffect(() => {
-    // Aquí iría la llamada a la API para obtener los productos
-    // Por ahora, usaremos datos de ejemplo
-    setProducts([
-      { id: 1, name: 'Producto 1', price: 10.99 },
-      { id: 2, name: 'Producto 2', price: 15.99 },
-      { id: 3, name: 'Producto 3', price: 20.99 },
-      { id: 4, name: 'Producto 4', price: 25.99 },
-      { id: 5, name: 'Producto 5', price: 30.99 },
-    ]);
+    fetch('http://127.0.0.1:8000/products')
+      .then(response => response.json())
+      .then(data => setProducts(data.products))
+      .catch(error => console.error('Error fetching products:', error));
   }, []);
 
   const handleIncrement = (productId) => {
@@ -46,6 +41,7 @@ const Products = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {products.map((product) => (
           <div key={product.id} className="bg-white p-4 rounded-lg shadow">
+            <img src={product.image} alt={product.name} className="w-full h-48 object-cover mb-4" />
             <h3 className="font-bold">{product.name}</h3>
             <p className="text-gray-600">${product.price.toFixed(2)}</p>
             <div className="flex items-center mt-2">

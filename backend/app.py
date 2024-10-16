@@ -7,11 +7,21 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from sqlalchemy import inspect
+from fastapi.middleware.cors import CORSMiddleware
 
 SECRET_KEY = "Q3BTRKRU9VA4T5HH0G7M"
 
 # Initialize FastAPI app
 app = FastAPI()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permitir solicitudes desde el frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Create all tables in the current FastAPI database (if they do not already exist)
 Base.metadata.create_all(bind=engine)
@@ -99,23 +109,24 @@ def insert_transaction(order_id: int, client_id: int, total: float):
 @app.post("/add-products")
 def add_products(db: Session = Depends(get_db)):
     products = [
-        {"name": "PlayStation 5", "price": 499.99, "stock": 50, "sale": None},
-        {"name": "Xbox Series X", "price": 499.99, "stock": 40, "sale": 10.0},  # 10% discount
-        {"name": "Nintendo Switch", "price": 299.99, "stock": 70, "sale": 5.0},  # 5% discount
-        {"name": "iPhone 13", "price": 999.99, "stock": 30, "sale": None},
-        {"name": "Samsung Galaxy S21", "price": 799.99, "stock": 25, "sale": 15.0},  # 15% discount
-        {"name": "MacBook Pro", "price": 1299.99, "stock": 20, "sale": 10.0},  # 10% discount
-        {"name": "Dell XPS 13", "price": 1099.99, "stock": 15, "sale": None},
-        {"name": "Sony WH-1000XM4", "price": 349.99, "stock": 100, "sale": None},
-        {"name": "Apple Watch Series 7", "price": 399.99, "stock": 80, "sale": 5.0},  # 5% discount
-        {"name": "GoPro Hero 9", "price": 399.99, "stock": 60, "sale": None},
+        {"name": "PlayStation 5", "price": 499.99, "stock": 50, "sale": None, "image":"https://www.unimart.com/cdn/shop/files/SonyConsoladeVideojuegosPlayStation5SlimPS5DigitalEdition.jpg?v=1701902756"},
+        {"name": "Xbox Series X", "price": 499.99, "stock": 40, "sale": 10.0, "image":"https://www.intelec.co.cr/image/cache/catalog/catalogo/Juegos/RRT-00001-800x800h.jpg.webp"},  # 10% discount
+        {"name": "Nintendo Switch", "price": 299.99, "stock": 70, "sale": 5.0, "image":"https://www.intelec.co.cr/image/cache/catalog/catalogo/HEG-S-KABAA-2-800x800.jpg.webp"},  # 5% discount
+        {"name": "iPhone 13", "price": 999.99, "stock": 30, "sale": None, "image":"https://tiendasishop.com/media/catalog/product/m/l/mlq63lz_a.jpg?optimize=high&bg-color=255,255,255&fit=bounds&height=700&width=700&canvas=700:700"},
+        {"name": "Samsung Galaxy S21", "price": 799.99, "stock": 25, "sale": 15.0, "image":"https://www.cqnetcr.com/117216-large_default/celular-samsung-galaxy-s21-fe-5g-sim-doble-64-.jpg"},  # 15% discount
+        {"name": "MacBook Pro", "price": 1299.99, "stock": 20, "sale": 10.0, "image":"https://tiendasishop.com/media/catalog/product/m/a/macbook_pro_13_in_silver_pdp_image_position-2_coes_7.jpg?optimize=high&bg-color=255,255,255&fit=bounds&height=700&width=700&canvas=700:700"},  # 10% discount
+        {"name": "Dell XPS 13", "price": 1099.99, "stock": 15, "sale": None, "image":"https://www.cqnetcr.com/106012-large_default/laptop-dell-xps-13-9310-core-i7-1165g7-16gb-512gb.jpg"},
+        {"name": "Sony WH-1000XM4", "price": 349.99, "stock": 100, "sale": None, "image":"https://www.sony.co.cr/image/5d02da5df552836db894cead8a68f5f3?fmt=pjpeg&wid=330&bgcolor=FFFFFF&bgc=FFFFFF"},
+        {"name": "Apple Watch Series 7", "price": 399.99, "stock": 80, "sale": 5.0, "image":"https://tiendasishop.com/media/catalog/product/m/k/mkn73be_a.jpg?optimize=high&bg-color=255,255,255&fit=bounds&height=700&width=700&canvas=700:700"},  # 5% discount
+        {"name": "GoPro Hero 9", "price": 399.99, "stock": 60, "sale": None, "image":"https://m.media-amazon.com/images/I/517+lSO8ilL.jpg"},
     ]
     for product_data in products:
         product = Product(
             name=product_data["name"],
             price=product_data["price"],
             stock=product_data["stock"],
-            sale=product_data["sale"]
+            sale=product_data["sale"],
+            img_link=product_data["image"]
         )
         db.add(product)
     

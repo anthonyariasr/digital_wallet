@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const Header = () => {
+  const [isPopulated, setIsPopulated] = useState(false);
+
   const handlePopulateDB = () => {
-    // Aquí iría la lógica para poblar la base de datos
-    console.log('Populate DB clicked');
+    fetch('http://127.0.0.1:8000/add-products', { method: 'POST' })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          setIsPopulated(true);
+          console.log('Products populated successfully');
+        }
+      })
+      .catch(error => console.error('Error populating products:', error));
   };
 
   return (
@@ -11,7 +20,8 @@ const Header = () => {
       <h1 className="text-2xl font-bold">POS System</h1>
       <button
         onClick={handlePopulateDB}
-        className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+        disabled={isPopulated}
+        className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded ${isPopulated ? 'bg-gray-500 cursor-not-allowed' : ''}`}
       >
         Populate DB
       </button>
