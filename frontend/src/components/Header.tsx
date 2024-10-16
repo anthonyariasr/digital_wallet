@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect } from 'react';
+import { ProductsContext } from '../context/ProductsContext';
 
 const Header = () => {
-  const [isPopulated, setIsPopulated] = useState(false);
+  const { isPopulated, setIsPopulated, checkPopulation } = useContext(ProductsContext);
+
+  useEffect(() => {
+    checkPopulation();
+  }, []);
 
   const handlePopulateDB = () => {
     fetch('http://127.0.0.1:8000/add-products', { method: 'POST' })
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          setIsPopulated(true);
-          console.log('Products populated successfully');
+          checkPopulation();
         }
       })
       .catch(error => console.error('Error populating products:', error));

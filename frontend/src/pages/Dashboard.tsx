@@ -1,7 +1,13 @@
 import React from 'react';
 import { DollarSign, Package, RefreshCw } from 'lucide-react';
 
-const Dashboard = () => {
+interface DashboardCardProps {
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  title: string;
+  value: string;
+}
+
+const Dashboard: React.FC = () => {
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
@@ -22,13 +28,13 @@ const Dashboard = () => {
   );
 };
 
-const DashboardCard = ({ icon: Icon, title, value }) => (
+const DashboardCard: React.FC<DashboardCardProps> = ({ icon: Icon, title, value }) => (
   <div className="bg-white p-6 rounded-lg shadow-md">
     <div className="flex items-center justify-between mb-4">
       <h2 className="text-xl font-semibold">{title}</h2>
       <Icon className="h-8 w-8 text-gray-500" />
     </div>
-    <p className="text-3xl font-bold">{value}</p>
+    <p className="text-2xl font-bold">{value}</p>
   </div>
 );
 
