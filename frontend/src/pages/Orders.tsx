@@ -1,7 +1,20 @@
 import React, { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 
-const Orders = () => {
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface OrdersProps {
+  selectedProducts: Product[];
+  handleQuantityChange: (index: number, quantity: number) => void;
+  onCancel: () => void;
+}
+
+const Orders: React.FC<OrdersProps> = ({ selectedProducts, handleQuantityChange, onCancel }) => {
   const [orders, setOrders] = useState([
     { id: 1, products: ['Producto 1', 'Producto 2'], total: 26.98, status: 'Pendiente' },
     { id: 2, products: ['Producto 3'], total: 15.99, status: 'Procesada' },
@@ -33,21 +46,21 @@ const Orders = () => {
 };
 
 const NewOrderForm = ({ onCancel }) => {
-  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleAddProduct = (product) => {
+  const handleAddProduct = (product: Product) => {
     setSelectedProducts([...selectedProducts, { ...product, quantity: 1 }]);
     setSearchTerm('');
   };
 
-  const handleQuantityChange = (index, newQuantity) => {
+  const handleQuantityChange = (index: number, newQuantity: number) => {
     const updatedProducts = [...selectedProducts];
     updatedProducts[index].quantity = newQuantity;
     setSelectedProducts(updatedProducts);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lógica para crear la orden
     onCancel();
@@ -75,54 +88,7 @@ const NewOrderForm = ({ onCancel }) => {
       </div>
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-2">Productos Seleccionados</h3>
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="text-left">Producto</th>
-              <th className="text-left">Cantidad</th>
-              <th className="text-left">Precio</th>
-              <th className="text-left">Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {selectedProducts.map((product, index) => (
-              <tr key={index}>
-                <td>{product.name}</td>
-                <td>
-                  <input
-                    type="number"
-                    min="1"
-                    value={product.quantity}
-                    onChange={(e) => handleQuantityChange(index, parseInt(e.target.value))}
-                    className="w-16 border rounded py-1 px-2"
-                  />
-                </td>
-                <td>${product.price.toFixed(2)}</td>
-                <td>${(product.price * product.quantity).toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="flex justify-between items-center">
-        <div className="text-xl font-bold">
-          Total: ${selectedProducts.reduce((sum, p) => sum + p.price * p.quantity, 0).toFixed(2)}
-        </div>
-        <div>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="bg-gray-300 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-200 mr-2"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200"
-          >
-            Crear Orden
-          </button>
-        </div>
+        <Orders selectedProducts={selectedProducts} handleQuantityChange={handleQuantityChange} onCancel={onCancel} />
       </div>
     </form>
   );
