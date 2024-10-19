@@ -223,6 +223,36 @@ def check_order_status_endpoint(order_id: int, db: Session = Depends(get_db)):
 def is_running():
     return {"status": "running"}
 
+@app.get("/orders")
+def get_all_orders(db: Session = Depends(get_db)):
+    orders = db.query(Order).all()
+    if not orders:
+        raise HTTPException(status_code=404, detail="No orders found.")
+    
+    all_orders = []
+    for order in orders:
+        products_in_order = db.execute(products_order_table.select().where(products_order_table.c.order_id == order.id)).fetchall()
+
+        product_list = []
+        for row in products_in_order:
+            product = db.query(Product).filter(Product.id == row.product_id).first()
+            product_info = {
+                "product_id": row.product_id,
+                "name": product.name,
+                "quantity": row.quantity,
+                "subtotal": row.subtotal
+            }
+            product_list.append(product_info)
+
+        order_info = {
+            "order_id": order.id,
+            "client_id": order.client_id,
+            "total": order.total,
+            "products": product_list
+        }
+        all_orders.append(order_info)
+
+    return {"orders": all_orders}
 
 @app.get("/qr-code/{order_id}")
 def get_qr_code(order_id: int):
