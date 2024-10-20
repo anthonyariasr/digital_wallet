@@ -36,11 +36,11 @@ inspector = inspect(engine)
 print("print:" + str(inspector.get_table_names()))  
 
 # PostgreSQL connection settings
-POSTGRES_HOST = "localhost"
-POSTGRES_DB = "proyecto_II"
-POSTGRES_USER = "postgres"
-POSTGRES_PASSWORD = "Luisa1240"
-POSTGRES_PORT = "5432"
+POSTGRES_HOST = ""
+POSTGRES_DB = ""
+POSTGRES_USER = ""
+POSTGRES_PASSWORD = ""
+POSTGRES_PORT = ""
 
 # Function to connect to PostgreSQL
 def get_postgres_connection():
@@ -101,7 +101,7 @@ def insert_transaction(order_id: int, client_id: int, total: float):
     cursor = conn.cursor()
     try:
         cursor.execute("INSERT INTO Sale_Order (order_id, client_id, processed, total) VALUES (%s, %s, %s, %s)", 
-                       (order_id, client_id, True, total))
+                       (order_id, client_id, False, total))
         conn.commit()
     except psycopg2.Error as e:
         print(f"Error inserting transaction in PostgreSQL: {e}")
@@ -275,6 +275,7 @@ def get_all_orders(db: Session = Depends(get_db)):
         order_info = {
             "order_id": order.id,
             "client_id": order.client_id,
+            "processed": order.processed,
             "total": order.total,
             "products": product_list
         }
