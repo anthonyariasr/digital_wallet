@@ -280,12 +280,13 @@ def get_all_orders(db: Session = Depends(get_db)):
 @app.get("/qr-code/{order_id}")
 def get_qr_code(order_id: int):
     qr_directory = "backend/images"
+    filename = f"order_{order_id}_qr.png"
     qr_filename = os.path.join(qr_directory, f"order_{order_id}_qr.png")
     
     if not os.path.exists(qr_filename):
         raise HTTPException(status_code=404, detail="QR code not found")
     
-    return FileResponse(qr_filename)
+    return FileResponse(filename)
 
 
 @app.get("/order/{order_id}")
