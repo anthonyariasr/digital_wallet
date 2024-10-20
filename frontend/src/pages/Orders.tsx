@@ -8,33 +8,28 @@ import { Order } from '../types';
 const OrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Obtener órdenes (datos mock por ahora)
+  // Fetch orders from the backend
   useEffect(() => {
     const fetchOrders = async () => {
+      setIsLoading(true);
       try {
-        // Reemplaza esto con la llamada real cuando el endpoint esté disponible
-        // const response = await axios.get('http://127.0.0.1:8000/orders');
-        // setOrders(response.data);
-
-        // Datos mock
-        setOrders([
-          {
-            id: 1,
-            products: ['PlayStation 5', 'Nintendo Switch'],
-            total: 799.98,
-            status: 'Pendiente',
-          },
-          {
-            id: 2,
-            products: ['Xbox Series X'],
-            total: 499.99,
-            status: 'Procesada',
-          },
-        ]);
-      } catch (error) {
-        console.error('Error al obtener las órdenes:', error);
-        // Maneja el error según sea necesario
+        const response = await axios.get('http://127.0.0.1:8000/orders');
+        if (response.data && Array.isArray(response.data.orders)) {
+          setOrders(response.data.orders);
+        } else {
+          setError('Unexpected response format.');
+        }
+      } catch (err: any) {
+        if (err.response && err.response.status === 404) {
+          setError('No orders found.');
+        } else {
+          setError('Failed to fetch orders.');
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -45,7 +40,7 @@ const OrdersPage: React.FC = () => {
     setIsCreatingOrder(!isCreatingOrder);
   };
 
-  // Función para agregar una nueva orden al estado
+  // Function to add a new order to the state
   const addOrder = (order: Order) => {
     setOrders([...orders, order]);
   };
@@ -53,18 +48,26 @@ const OrdersPage: React.FC = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Órdenes</h1>
+        <h1 className="text-3xl font-bold">Orders</h1>
         <button
           onClick={toggleOrderCreation}
           className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition duration-200 flex items-center"
         >
-          <Plus className="mr-2" /> Nueva Orden
+          <Plus className="mr-2" /> New Order
         </button>
       </div>
       {isCreatingOrder ? (
         <NewOrderForm onCancel={toggleOrderCreation} onOrderCreated={addOrder} />
       ) : (
-        <OrderList orders={orders} />
+        <>
+          {isLoading ? (
+            <p className="text-center text-gray-500">Loading orders...</p>
+          ) : error ? (
+            <p className="text-center text-red-500">{error}</p>
+          ) : (
+            <OrderList orders={orders} />
+          )}
+        </>
       )}
     </div>
   );

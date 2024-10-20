@@ -11,10 +11,22 @@ export interface APIProduct {
     quantity: number;
   }
   
+  export interface OrderProduct {
+    product_id: number;
+    name: string;
+    quantity: number;
+    subtotal: number;
+  }
+  
   export interface Order {
-    id: number;
-    products: string[];
+    order_id: number;
+    client_id: number;
     total: number;
-    status: string;
+    products: OrderProduct[];
+  }
+
+  export interface RechargeResponse {
+    message: string;
+    qr_path: string;
   }
   
