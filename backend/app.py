@@ -112,9 +112,10 @@ def insert_transaction(order_id: int, client_id: int, total: float):
 
 # Función para encriptar el mensaje "is valid"
 def encrypt_message(key, plaintext):
-    key = key.ljust(32)[:32].encode()  # Asegurarse que el key sea de 32 bytes
+    key = key.ljust(32)[:32].encode()  # Asegurarse de que el key sea de 32 bytes
 
-    iv = b'\x00' * 16  # Vector de inicialización (IV), usa un valor aleatorio en producción
+    # Generar un IV aleatorio
+    iv = os.urandom(16)  # Para producción, usa un IV aleatorio
     padder = padding.PKCS7(128).padder()
     padded_data = padder.update(plaintext.encode()) + padder.finalize()
 
@@ -122,6 +123,7 @@ def encrypt_message(key, plaintext):
     encryptor = cipher.encryptor()
     ciphertext = encryptor.update(padded_data) + encryptor.finalize()
 
+    # Retornar el IV concatenado con el ciphertext codificado en base64
     return base64.b64encode(iv + ciphertext).decode()
 
 # POST routes
