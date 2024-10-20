@@ -27,6 +27,6 @@ export interface APIProduct {
 
   export interface RechargeResponse {
     message: string;
-    qr_path: string;
+    qr_filename: string;
   }
   

@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from sqlalchemy import inspect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
@@ -18,6 +19,8 @@ SECRET_KEY = "Q3BTRKRU9VA4T5HH0G7M"
 # Initialize FastAPI app
 app = FastAPI()
 
+# Montar el directorio de imágenes para servir archivos estáticos
+app.mount("/images", StaticFiles(directory="backend/images"), name="images")
 
 app.add_middleware(
     CORSMiddleware,

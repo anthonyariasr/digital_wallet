@@ -10,7 +10,7 @@ const Navigation = () => {
     { path: '/products', icon: Package, label: 'Productos' },
     { path: '/orders', icon: ShoppingCart, label: 'Órdenes' },
     { path: '/recharges', icon: RefreshCw, label: 'Recargas' },
-    { path: '/history', icon: Clock, label: 'Historial' },
+    //{ path: '/history', icon: Clock, label: 'Historial' },
     { path: '/settings', icon: Settings, label: 'Configuración' },
   ];
 

@@ -36,11 +36,11 @@ const Recharges = () => {
         }
       );
 
-      const { message, qr_path } = response.data;
-      console.log(message, qr_path);
+      const { message, qr_filename } = response.data;
+      console.log(message, qr_filename);
 
       // Construir la URL completa del QR code
-      const qrUrl = `http://127.0.0.1:8000/${qr_path}`;
+      const qrUrl = `http://127.0.0.1:8000/images/${qr_filename}`;
       setQrCode(qrUrl);
       console.log(qrCode);
     } catch (err: any) {
