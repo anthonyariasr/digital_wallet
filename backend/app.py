@@ -8,6 +8,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from sqlalchemy import inspect
 from fastapi.middleware.cors import CORSMiddleware
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import padding
+import base64
 
 SECRET_KEY = "Q3BTRKRU9VA4T5HH0G7M"
 
@@ -103,6 +107,19 @@ def insert_transaction(order_id: int, client_id: int, total: float):
         cursor.close()
         conn.close()
 
+# Función para encriptar el mensaje "is valid"
+def encrypt_message(key, plaintext):
+    key = key.ljust(32)[:32].encode()  # Asegurarse que el key sea de 32 bytes
+
+    iv = b'\x00' * 16  # Vector de inicialización (IV), usa un valor aleatorio en producción
+    padder = padding.PKCS7(128).padder()
+    padded_data = padder.update(plaintext.encode()) + padder.finalize()
+
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+    ciphertext = encryptor.update(padded_data) + encryptor.finalize()
+
+    return base64.b64encode(iv + ciphertext).decode()
 
 # POST routes
 # Route to add predefined products to the database
@@ -173,11 +190,12 @@ def create_order(product_ids: list[int], quantities: list[int], client_id: int =
     if not os.path.exists(qr_directory):
         os.makedirs(qr_directory)
 
-    qr_filename = os.path.join(qr_directory, f"order_{order.id}_qr.png")
+    filename = f"order_{order.id}_qr.png"
+    qr_filename = os.path.join(qr_directory, filename)
     qr_img = qr.make_image(fill='black', back_color='white')
     qr_img.save(qr_filename)
 
-    return {"message": f"Order with ID {order.id} created successfully", "qr_path": qr_filename}
+    return {"message": f"Order with ID {order.id} created successfully", "qr_filename": filename}
 
 
 @app.post("/qr-code/recharge")
@@ -185,26 +203,31 @@ def generate_recharge_qr(amount: float):
     if not amount:
         raise HTTPException(status_code=400, detail="Amount not provided.")
 
-    data_to_sign = f"transaction=recharge&amount={amount}"
-    hash_key = hmac.new(SECRET_KEY.encode(), data_to_sign.encode(), hashlib.sha256).hexdigest()
+    # Mensaje encriptado "is valid"
+    encrypted_message = encrypt_message(SECRET_KEY, "is valid")
 
-    qr_data = {"transaction": "recharge", "amount": amount, "hash": hash_key}
+    # Datos que irán en el QR (sin hash, pero con mensaje encriptado)
+    qr_data = {"transaction": "recharge", "amount": amount, "encrypted_message": encrypted_message}
     
+    # Crear el QR con los datos
     qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
     qr.add_data(qr_data)
     qr.make(fit=True)
 
+    # Guardar el QR en un directorio
     qr_directory = "backend/images"
     if not os.path.exists(qr_directory):
         os.makedirs(qr_directory)
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    qr_filename = os.path.join(qr_directory, f"recharge_{timestamp}.png")
+    filename = f"recharge_{timestamp}.png"
+    qr_filename = os.path.join(qr_directory, filename)
 
+    # Generar la imagen del QR y guardarla
     qr_img = qr.make_image(fill='black', back_color='white')
     qr_img.save(qr_filename)
 
-    return {"message": "QR code generated successfully", "qr_path": qr_filename}
+    return {"message": "QR code generated successfully", "qr_filename": filename}
 
 
 @app.post("/check-order-status/{order_id}")
