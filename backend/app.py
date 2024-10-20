@@ -194,7 +194,7 @@ def generate_recharge_qr(amount: float):
     qr.add_data(qr_data)
     qr.make(fit=True)
 
-    qr_directory = "backend/images"
+    qr_directory = "backend\images"
     if not os.path.exists(qr_directory):
         os.makedirs(qr_directory)
 

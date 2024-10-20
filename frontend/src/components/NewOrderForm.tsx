@@ -14,22 +14,24 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({ onCancel, onOrderCreated })
   const [searchTerm, setSearchTerm] = useState('');
   const [availableProducts, setAvailableProducts] = useState<APIProduct[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<APIProduct[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Obtener productos desde el endpoint
+  // Fetch products from the backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get('http://127.0.0.1:8000/products');
 
-        // Verificar si response.data.products es un array
+        // Verify if response.data.products is an array
         if (response.data && Array.isArray(response.data.products)) {
           setAvailableProducts(response.data.products);
         } else {
-          console.error('Formato de datos inesperado:', response.data);
+          console.error('Unexpected data format:', response.data);
           setAvailableProducts([]);
         }
       } catch (error) {
-        console.error('Error al obtener los productos:', error);
+        console.error('Error fetching products:', error);
         setAvailableProducts([]);
       }
     };
@@ -37,7 +39,7 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({ onCancel, onOrderCreated })
     fetchProducts();
   }, []);
 
-  // Filtrar productos según el término de búsqueda
+  // Filter products based on search term
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredProducts([]);
@@ -52,7 +54,7 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({ onCancel, onOrderCreated })
   }, [searchTerm, availableProducts]);
 
   const handleAddProduct = (product: APIProduct) => {
-    // Evitar agregar el mismo producto más de una vez
+    // Prevent adding the same product more than once
     const existingProduct = selectedProducts.find((p) => p.id === product.id);
     if (existingProduct) return;
 
@@ -65,9 +67,9 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({ onCancel, onOrderCreated })
     const updatedProducts = [...selectedProducts];
     const product = updatedProducts[index];
 
-    // Verificar que la cantidad no exceda el stock
+    // Check if the new quantity exceeds stock
     if (newQuantity > product.stock) {
-      alert(`No hay suficiente stock para ${product.name}. Stock disponible: ${product.stock}`);
+      alert(`Insufficient stock for ${product.name}. Available stock: ${product.stock}`);
       return;
     }
 
@@ -82,52 +84,67 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({ onCancel, onOrderCreated })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validar que haya al menos un producto seleccionado
+  
+    // Validate that at least one product is selected
     if (selectedProducts.length === 0) {
-      alert('Selecciona al menos un producto para la orden.');
+      alert('Please select at least one product for the order.');
       return;
     }
-
-    // Calcular total con descuentos aplicados
-    const total = selectedProducts.reduce((acc, product) => {
-      const discountedPrice = product.sale
-        ? (product.price * (100 - product.sale)) / 100
-        : product.price;
-      return acc + discountedPrice * product.quantity;
-    }, 0);
-
-    // Preparar datos para enviar
+  
+    // Extract product IDs and quantities into separate arrays
+    const product_ids = selectedProducts.map((p) => p.id);
+    const quantities = selectedProducts.map((p) => p.quantity);
+  
+    // Optional: If you have a client_id, include it. Otherwise, you can omit or set to null.
+    const client_id = null; // Replace with actual client ID if available
+  
+    // Prepare data to send
     const orderData = {
-      products: selectedProducts.map((p) => ({ id: p.id, quantity: p.quantity })),
-      total,
-      status: 'Pendiente', // Puedes ajustar el estado según tus necesidades
+      product_ids,
+      quantities,
     };
 
+  
+    setIsSubmitting(true);
+    setError(null);
+  
     try {
-      const response = await axios.post('http://127.0.0.1:8000/create-order', orderData);
-      const newOrder: Order = response.data;
-
-      // Asumiendo que el API devuelve la orden creada con id, productos como array de nombres, total y estado
-      onOrderCreated(newOrder);
-
-      // Limpiar formulario
+      console.log('Sending Order Data:', orderData);
+      const response = await axios.post('http://127.0.0.1:8000/create-order', orderData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      // Since the backend returns a message and qr_path, handle accordingly
+      const { message, qr_path } = response.data;
+      alert(`${message}\nQR Code Path: ${qr_path}`);
+  
+      // Optionally, refetch the orders or update the state
+      onOrderCreated(response.data); // Adjust this based on what you need
+      // Clear the form
       setSelectedProducts([]);
       setSearchTerm('');
       setFilteredProducts([]);
       onCancel();
-    } catch (error) {
-      console.error('Error al crear la orden:', error);
-      alert('Hubo un error al crear la orden. Por favor, intenta nuevamente.');
+    } catch (error: any) {
+      console.error('Error creating order:', error);
+      if (error.response && error.response.data && error.response.data.detail) {
+        setError(error.response.data.detail);
+      } else {
+        setError('Failed to create order. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Nueva Orden</h2>
+      <h2 className="text-2xl font-bold mb-4">New Order</h2>
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="product-search">
-          Buscar Producto
+          Search Product
         </label>
         <div className="relative">
           <input
@@ -136,7 +153,7 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({ onCancel, onOrderCreated })
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline pr-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar producto..."
+            placeholder="Search for a product..."
           />
           <Search className="absolute right-3 top-2 h-5 w-5 text-gray-400" />
         </div>
@@ -149,16 +166,16 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({ onCancel, onOrderCreated })
         )}
       </div>
       <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2">Productos Seleccionados</h3>
+        <h3 className="text-lg font-semibold mb-2">Selected Products</h3>
         {selectedProducts.length > 0 ? (
           <table className="w-full">
             <thead>
               <tr>
-                <th className="text-left">Producto</th>
-                <th className="text-left">Cantidad</th>
-                <th className="text-left">Precio</th>
-                <th className="text-left">Total</th>
-                <th className="text-left">Acciones</th>
+                <th className="text-left">Product</th>
+                <th className="text-left">Quantity</th>
+                <th className="text-left">Price</th>
+                <th className="text-left">Subtotal</th>
+                <th className="text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -193,16 +210,14 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({ onCancel, onOrderCreated })
                         <span>${product.price.toFixed(2)}</span>
                       )}
                     </td>
-                    <td className="py-2 px-4">
-                      ${ (discountedPrice * product.quantity).toFixed(2) }
-                    </td>
+                    <td className="py-2 px-4">${(discountedPrice * product.quantity).toFixed(2)}</td>
                     <td className="py-2 px-4">
                       <button
                         type="button"
                         onClick={() => handleRemoveProduct(product.id)}
                         className="text-red-500 hover:text-red-700"
                       >
-                        Eliminar
+                        Remove
                       </button>
                     </td>
                   </tr>
@@ -211,22 +226,25 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({ onCancel, onOrderCreated })
             </tbody>
           </table>
         ) : (
-          <p>No hay productos seleccionados.</p>
+          <p className="text-gray-500">No products selected.</p>
         )}
       </div>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
       <div className="flex justify-end">
         <button
           type="button"
           onClick={onCancel}
           className="bg-gray-500 text-white py-2 px-4 rounded-lg mr-2 hover:bg-gray-600 transition duration-200"
+          disabled={isSubmitting}
         >
-          Cancelar
+          Cancel
         </button>
         <button
           type="submit"
           className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition duration-200"
+          disabled={isSubmitting}
         >
-          Crear Orden
+          {isSubmitting ? 'Creating...' : 'Create Order'}
         </button>
       </div>
     </form>

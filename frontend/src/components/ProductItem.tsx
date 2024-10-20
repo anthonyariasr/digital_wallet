@@ -7,7 +7,7 @@ interface ProductItemProps {
 }
 
 const ProductItem: React.FC<ProductItemProps> = ({ product, onAdd }) => {
-  // Calcular el precio con descuento si aplica
+  // Calculate discounted price if applicable
   const discountedPrice = product.sale
     ? (product.price * (100 - product.sale)) / 100
     : product.price;
