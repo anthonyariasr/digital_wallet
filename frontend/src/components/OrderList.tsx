@@ -13,9 +13,9 @@ const OrderList: React.FC<OrderListProps> = ({ orders }) => {
 
   return (
     <div>
-      {orders.map((order) => (
-        <OrderDetails key={order.order_id} order={order} />
-      ))}
+      {orders.map((order, index) => (
+        <OrderDetails  key={order.order_id || Math.random().toString(36).substr(2, 9)} order={order} />
+        ))}
     </div>
   );
 };
