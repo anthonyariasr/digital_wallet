@@ -39,7 +39,7 @@ print("print:" + str(inspector.get_table_names()))
 POSTGRES_HOST = "localhost"
 POSTGRES_DB = "proyecto_II"
 POSTGRES_USER = "postgres"
-POSTGRES_PASSWORD = "Luisa1240"
+POSTGRES_PASSWORD = "admin"
 POSTGRES_PORT = "5432"
 
 # Function to connect to PostgreSQL
