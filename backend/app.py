@@ -101,7 +101,7 @@ def insert_transaction(order_id: int, client_id: int, total: float):
     cursor = conn.cursor()
     try:
         cursor.execute("INSERT INTO Sale_Order (order_id, client_id, processed, total) VALUES (%s, %s, %s, %s)", 
-                       (order_id, client_id, True, total))
+                       (order_id, client_id, False, total))
         conn.commit()
     except psycopg2.Error as e:
         print(f"Error inserting transaction in PostgreSQL: {e}")

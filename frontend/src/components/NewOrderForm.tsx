@@ -117,8 +117,8 @@ const NewOrderForm: React.FC<NewOrderFormProps> = ({ onCancel, onOrderCreated })
       });
   
       // Since the backend returns a message and qr_path, handle accordingly
-      const { message, qr_path } = response.data;
-      alert(`${message}\nQR Code Path: ${qr_path}`);
+      const { message, qr_filename } = response.data;
+      alert(`${message}\nQR Code Path: ${qr_filename}`);
   
       // Optionally, refetch the orders or update the state
       onOrderCreated(response.data); // Adjust this based on what you need
