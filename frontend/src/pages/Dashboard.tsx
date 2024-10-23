@@ -115,6 +115,9 @@ const Dashboard: React.FC = () => {
           Procesar recarga
         </button>
       </div>
+      <footer className="mt-12 text-center text-gray-500">
+        &copy; {new Date().getFullYear()} Desarrollado por Anthony Arias, Luis Méndez y Roosevelt Pérez
+      </footer>
     </div>
   );
 };

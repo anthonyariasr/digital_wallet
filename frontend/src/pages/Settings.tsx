@@ -3,12 +3,12 @@ import { Save } from 'lucide-react';
 
 const Settings = () => {
   const [settings, setSettings] = useState({
-    businessName: 'Comdero TEC',
+    businessName: 'Tienda de Electrodomésticos',
     address: 'Santa Clara, San Carlos, Costa Rica',
     phone: '8888-8888',
-    email: 'comedor@itcr.com',
+    email: 'electro@itcr.com',
     taxRate: 0.16,
-    currency: 'CRC',
+    currency: 'USD',
     printerEnabled: true,
   });
 
