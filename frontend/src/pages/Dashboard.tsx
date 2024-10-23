@@ -86,11 +86,11 @@ const Dashboard: React.FC = () => {
 
   // Funciones para redirigir a las páginas correspondientes
   const handleCreateOrder = () => {
-    navigate('/create-order'); // Redirigir a la página de crear orden
+    navigate('/orders'); // Redirigir a la página de crear orden
   };
 
   const handleProcessRecharge = () => {
-    navigate('/process-recharge'); // Redirigir a la página de procesar recarga
+    navigate('/recharges'); // Redirigir a la página de procesar recarga
   };
 
   return (
