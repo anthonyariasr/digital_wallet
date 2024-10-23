@@ -84,7 +84,6 @@ def check_order_status(order_id: int, total, db: Session):
 
     # If no positive response in 1 minute, rollback the order
     cursor.execute("delete from Sale_Order where order_id = %s", (order_id,))
-    result = cursor.fetchone()
 
     cursor.close()
     conn.close()
