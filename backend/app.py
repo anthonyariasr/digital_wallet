@@ -14,7 +14,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import padding
 import base64
 
-SECRET_KEY = "Q3BTRKRU9VA4T5HH0G7M"
+SECRET_KEY = ""
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -36,11 +36,11 @@ inspector = inspect(engine)
 print("print:" + str(inspector.get_table_names()))  
 
 # PostgreSQL connection settings
-POSTGRES_HOST = "localhost"
-POSTGRES_DB = "proyecto_II"
-POSTGRES_USER = "postgres"
-POSTGRES_PASSWORD = "admin"
-POSTGRES_PORT = "5432"
+POSTGRES_HOST = ""
+POSTGRES_DB = ""
+POSTGRES_USER = ""
+POSTGRES_PASSWORD = ""
+POSTGRES_PORT = ""
 
 # Function to connect to PostgreSQL
 def get_postgres_connection():
@@ -83,6 +83,9 @@ def check_order_status(order_id: int, total, db: Session):
         attempts += 1
 
     # If no positive response in 1 minute, rollback the order
+    cursor.execute("delete from Sale_Order where order_id = %s", (order_id,))
+    result = cursor.fetchone()
+
     cursor.close()
     conn.close()
     try:
